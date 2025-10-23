@@ -3,17 +3,27 @@
   "manifest": {
     "version": 1,
     "install": {
-      "R": {
-        "pkg-path": "R"
-      },
       "claude-code": {
         "pkg-path": "claude-code"
+      },
+      "git": {
+        "pkg-path": "git"
+      },
+      "r-with-packages": {
+        "flake": "."
       },
       "rstudio": {
         "pkg-path": "rstudio"
       }
     },
-    "hook": {},
+    "vars": {
+      "R_LIBS_SITE": "-",
+      "R_LIBS_USER": "-",
+      "R_PROFILE_USER": "/dev/null"
+    },
+    "hook": {
+      "on-activate": ""
+    },
     "profile": {},
     "options": {
       "systems": [
@@ -25,126 +35,6 @@
     }
   },
   "packages": [
-    {
-      "attr_path": "R",
-      "broken": false,
-      "derivation": "/nix/store/wd9d2ias8af0y5q9wlhgszkdqg2pj7bj-R-4.5.1.drv",
-      "description": "Free software environment for statistical computing and graphics",
-      "install_id": "R",
-      "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "name": "R-4.5.1",
-      "pname": "R",
-      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "rev_count": 856926,
-      "rev_date": "2025-09-05T10:37:24Z",
-      "scrape_date": "2025-09-08T03:40:11.354952Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "4.5.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/a0p50fszslaq0f72c71rzpshvxwmps9k-R-4.5.1",
-        "tex": "/nix/store/bkly9dfcj74q7p1yxvj06b05xy932vsi-R-4.5.1-tex"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "R",
-      "broken": false,
-      "derivation": "/nix/store/bhj2s2zsijwqas1jxa5b94f5papp2p8v-R-4.5.1.drv",
-      "description": "Free software environment for statistical computing and graphics",
-      "install_id": "R",
-      "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "name": "R-4.5.1",
-      "pname": "R",
-      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "rev_count": 856926,
-      "rev_date": "2025-09-05T10:37:24Z",
-      "scrape_date": "2025-09-08T03:52:20.742544Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "4.5.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/6cf0n6fndqsr8zv85ragcir06mfdlnxk-R-4.5.1",
-        "tex": "/nix/store/b2dwjv162s42flc8nkwzdp89rqk3nfpb-R-4.5.1-tex"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "R",
-      "broken": false,
-      "derivation": "/nix/store/x918gb3s73g5shb2vhbm3r9syxrlir5m-R-4.5.1.drv",
-      "description": "Free software environment for statistical computing and graphics",
-      "install_id": "R",
-      "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "name": "R-4.5.1",
-      "pname": "R",
-      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "rev_count": 856926,
-      "rev_date": "2025-09-05T10:37:24Z",
-      "scrape_date": "2025-09-08T04:22:01.266801Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "4.5.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/p6f2qy3mwffp54r8miwll1fssc0r97w5-R-4.5.1",
-        "tex": "/nix/store/khwnbikwmlw4wnd5aprvdhiv709jgj08-R-4.5.1-tex"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "R",
-      "broken": false,
-      "derivation": "/nix/store/r5687axlpnplv3lv6h8029b6zyghyjd8-R-4.5.1.drv",
-      "description": "Free software environment for statistical computing and graphics",
-      "install_id": "R",
-      "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "name": "R-4.5.1",
-      "pname": "R",
-      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
-      "rev_count": 856926,
-      "rev_date": "2025-09-05T10:37:24Z",
-      "scrape_date": "2025-09-08T04:54:29.221597Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "4.5.1",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/rdb3infn8jsyf3jjqzaabcvxb890syic-R-4.5.1",
-        "tex": "/nix/store/8s0pfh417gc7azlwdfi84mxg2xcaxa9b-R-4.5.1-tex"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
     {
       "attr_path": "claude-code",
       "broken": false,
@@ -256,6 +146,128 @@
       ],
       "outputs": {
         "out": "/nix/store/cq3s5zjzxfyikg3nfij96ydqg7mq08bf-claude-code-1.0.105"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "git",
+      "broken": false,
+      "derivation": "/nix/store/my37053qlsn20agd4gngw3akvvkj8ycn-git-2.50.1.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "name": "git-2.50.1",
+      "pname": "git",
+      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "rev_count": 856926,
+      "rev_date": "2025-09-05T10:37:24Z",
+      "scrape_date": "2025-09-08T03:40:12.576367Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.50.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/36rqvcm3q9jdbzysr6x6si9i15yyy9yh-git-2.50.1-doc",
+        "out": "/nix/store/56avrmkafl3ymr5azsgx4lagzrhc79nd-git-2.50.1"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "git",
+      "broken": false,
+      "derivation": "/nix/store/46mhgflpndhr99rccamikg7pjwknxylg-git-2.50.1.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "name": "git-2.50.1",
+      "pname": "git",
+      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "rev_count": 856926,
+      "rev_date": "2025-09-05T10:37:24Z",
+      "scrape_date": "2025-09-08T03:52:22.468854Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.50.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/ln77l8pbk2gyvavr0lgb45xq4i4y5f2p-git-2.50.1-debug",
+        "doc": "/nix/store/i8gjlj5vpcllwpkw53lzxl2wa8j7vlld-git-2.50.1-doc",
+        "out": "/nix/store/jpadzfxc9zz3cacng4wlyn6vzhgf3mga-git-2.50.1"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "git",
+      "broken": false,
+      "derivation": "/nix/store/asmf27ybgmdfkmgn1vrfl87g0havppnk-git-2.50.1.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "name": "git-2.50.1",
+      "pname": "git",
+      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "rev_count": 856926,
+      "rev_date": "2025-09-05T10:37:24Z",
+      "scrape_date": "2025-09-08T04:22:02.466701Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.50.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "doc": "/nix/store/axw33im2q7q6bi3j8cbhi139n9k1q9zb-git-2.50.1-doc",
+        "out": "/nix/store/h32rn7zl7ac3jl0iidf7ll3rwj81961x-git-2.50.1"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "git",
+      "broken": false,
+      "derivation": "/nix/store/s9ilqag44931jnwrazwrha1ql5cfahq4-git-2.50.1.drv",
+      "description": "Distributed version control system",
+      "install_id": "git",
+      "license": "GPL-2.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "name": "git-2.50.1",
+      "pname": "git",
+      "rev": "8eb28adfa3dc4de28e792e3bf49fcf9007ca8ac9",
+      "rev_count": 856926,
+      "rev_date": "2025-09-05T10:37:24Z",
+      "scrape_date": "2025-09-08T04:54:31.079908Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "2.50.1",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "debug": "/nix/store/xipypc58mgavflc7am3m28sk9hpczwf6-git-2.50.1-debug",
+        "doc": "/nix/store/64fvclm5bwrp7zff8wa3cl8z6lhczc9s-git-2.50.1-doc",
+        "out": "/nix/store/zhv8ib8y1zfi76afddfnp8fmm562bgaa-git-2.50.1"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -376,6 +388,114 @@
       "system": "x86_64-linux",
       "group": "toplevel",
       "priority": 5
+    },
+    {
+      "install_id": "r-with-packages",
+      "locked-url": "git+file:///Users/price/development/camille/r-shiny-residency-interviews",
+      "flake-description": "R Shiny environment with required packages",
+      "locked-flake-attr-path": "packages.aarch64-darwin.default",
+      "derivation": "/nix/store/2bdia94b5hs5z8b68zip4dd3wjxsb9l1-R-4.5.1-wrapper.drv",
+      "outputs": {
+        "out": "/nix/store/706h1ix0ijxds4g01dvnk6sci154x405-R-4.5.1-wrapper"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "aarch64-darwin",
+      "system": "aarch64-darwin",
+      "name": "R-4.5.1-wrapper",
+      "description": "Free software environment for statistical computing and graphics",
+      "licenses": [
+        "GPL-2.0-or-later"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 4
+    },
+    {
+      "install_id": "r-with-packages",
+      "locked-url": "git+file:///Users/price/development/camille/r-shiny-residency-interviews",
+      "flake-description": "R Shiny environment with required packages",
+      "locked-flake-attr-path": "packages.aarch64-linux.default",
+      "derivation": "/nix/store/bidbbp2991ix65dmwrhmrpn44zkbj7yx-R-4.5.1-wrapper.drv",
+      "outputs": {
+        "out": "/nix/store/b2y6v394i69x968fs0l1n6iwk5cc6mih-R-4.5.1-wrapper"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "aarch64-linux",
+      "system": "aarch64-linux",
+      "name": "R-4.5.1-wrapper",
+      "description": "Free software environment for statistical computing and graphics",
+      "licenses": [
+        "GPL-2.0-or-later"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 4
+    },
+    {
+      "install_id": "r-with-packages",
+      "locked-url": "git+file:///Users/price/development/camille/r-shiny-residency-interviews",
+      "flake-description": "R Shiny environment with required packages",
+      "locked-flake-attr-path": "packages.x86_64-darwin.default",
+      "derivation": "/nix/store/8ag7yy909j065a7b7pcpi5qnvyd5yp2v-R-4.5.1-wrapper.drv",
+      "outputs": {
+        "out": "/nix/store/0pm2wns6dasry40gkba5gzyl9k2xm0p8-R-4.5.1-wrapper"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "x86_64-darwin",
+      "system": "x86_64-darwin",
+      "name": "R-4.5.1-wrapper",
+      "description": "Free software environment for statistical computing and graphics",
+      "licenses": [
+        "GPL-2.0-or-later"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 4
+    },
+    {
+      "install_id": "r-with-packages",
+      "locked-url": "git+file:///Users/price/development/camille/r-shiny-residency-interviews",
+      "flake-description": "R Shiny environment with required packages",
+      "locked-flake-attr-path": "packages.x86_64-linux.default",
+      "derivation": "/nix/store/ifs72vpmqhxb535wc9b22ccl0xk5haay-R-4.5.1-wrapper.drv",
+      "outputs": {
+        "out": "/nix/store/d7ki2agbnvja761axb018alz712pymzq-R-4.5.1-wrapper"
+      },
+      "output-names": [
+        "out"
+      ],
+      "outputs-to-install": [
+        "out"
+      ],
+      "requested-outputs-to-install": [],
+      "package-system": "x86_64-linux",
+      "system": "x86_64-linux",
+      "name": "R-4.5.1-wrapper",
+      "description": "Free software environment for statistical computing and graphics",
+      "licenses": [
+        "GPL-2.0-or-later"
+      ],
+      "broken": false,
+      "unfree": false,
+      "priority": 4
     }
   ]
 }
