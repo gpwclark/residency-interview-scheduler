@@ -326,7 +326,11 @@ server <- function(input, output, session) {
     df <- filtered_interviews() %>%
       select(Program, Rank, Date = DateStr, Weekday, Priority, Status)
     
-    datatable(df,
+    # Add a column to track if this specific combination is selected
+    df$IsSelected <- paste(df$Program, df$Date) %in% 
+                     paste(values$selected_programs, values$selected_dates)
+    
+    dt <- datatable(df,
               selection = 'single',
               options = list(
                 pageLength = -1,  # Show all rows
@@ -335,7 +339,8 @@ server <- function(input, output, session) {
                 paging = FALSE,  # Disable pagination
                 dom = 'ft',  # Just filter and table, no pagination info
                 columnDefs = list(
-                  list(className = 'dt-center', targets = '_all')
+                  list(className = 'dt-center', targets = '_all'),
+                  list(visible = FALSE, targets = 6)  # Hide IsSelected column
                 )
               ),
               rownames = FALSE) %>%
@@ -357,15 +362,43 @@ server <- function(input, output, session) {
           c("normal", "bold", "bold")
         )
       )
+    
+    # Add highlighting for selected rows
+    dt %>% formatStyle(
+      columns = 0:6,
+      valueColumns = 'IsSelected',
+      backgroundColor = styleEqual(TRUE, '#e6f2ff')
+    )
   }, server = FALSE)
   
-  # Handle row selection
+  # Handle row selection in available interviews
   observeEvent(input$available_interviews_rows_selected, {
     if (!is.null(input$available_interviews_rows_selected)) {
       selected_row <- filtered_interviews()[input$available_interviews_rows_selected, ]
       
-      # Check if this is a valid selection
-      if (selected_row$Status == "Available") {
+      # Check if this specific interview is already selected (for toggle functionality)
+      is_already_selected <- any(
+        values$selected_programs == selected_row$Program & 
+        values$selected_dates == selected_row$DateStr
+      )
+      
+      if (is_already_selected) {
+        # Remove from selected interviews (toggle off)
+        values$selected_interviews <- values$selected_interviews %>%
+          filter(!(Program == selected_row$Program & DateStr == selected_row$DateStr))
+        
+        # Rebuild the dates and programs arrays from the remaining selections
+        if (nrow(values$selected_interviews) > 0) {
+          values$selected_dates <- values$selected_interviews$DateStr
+          values$selected_programs <- values$selected_interviews$Program
+        } else {
+          values$selected_dates <- character()
+          values$selected_programs <- character()
+        }
+        
+        showNotification(paste("Removed:", selected_row$Program, "on", selected_row$DateStr),
+                         type = "message", duration = 2)
+      } else if (selected_row$Status == "Available") {
         # Add to selected interviews
         values$selected_interviews <- rbind(values$selected_interviews, selected_row)
         values$selected_dates <- c(values$selected_dates, selected_row$DateStr)
@@ -373,8 +406,11 @@ server <- function(input, output, session) {
         
         showNotification(paste("Added:", selected_row$Program, "on", selected_row$DateStr),
                          type = "message", duration = 2)
+      } else if (selected_row$Status == "Date Conflict") {
+        showNotification(paste("Cannot select: Another interview already scheduled on", selected_row$DateStr),
+                         type = "warning", duration = 3)
       } else {
-        showNotification(paste("Cannot select:", selected_row$Status),
+        showNotification(paste("Cannot select: Program already has a scheduled date"),
                          type = "warning", duration = 3)
       }
     }
@@ -420,8 +456,15 @@ server <- function(input, output, session) {
       # Remove from all tracking variables
       values$selected_interviews <- values$selected_interviews %>%
         filter(!(Program == row_to_remove$Program & DateStr == row_to_remove$DateStr))
-      values$selected_dates <- values$selected_dates[values$selected_dates != row_to_remove$DateStr]
-      values$selected_programs <- values$selected_programs[values$selected_programs != row_to_remove$Program]
+      
+      # Rebuild the dates and programs arrays from the remaining selections
+      if (nrow(values$selected_interviews) > 0) {
+        values$selected_dates <- values$selected_interviews$DateStr
+        values$selected_programs <- values$selected_interviews$Program
+      } else {
+        values$selected_dates <- character()
+        values$selected_programs <- character()
+      }
       
       showNotification(paste("Removed:", row_to_remove$Program),
                        type = "message", duration = 2)
