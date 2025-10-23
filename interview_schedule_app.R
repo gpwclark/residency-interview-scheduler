@@ -7,6 +7,8 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("lubridate")) install.packages("lubridate")
 if (!require("shinythemes")) install.packages("shinythemes")
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
+if (!require("tidyr")) install.packages("tidyr")
+if (!require("ggplot2")) install.packages("ggplot2")
 
 library(shiny)
 library(DT)
@@ -15,6 +17,8 @@ library(dplyr)
 library(lubridate)
 library(shinythemes)
 library(shinyWidgets)
+library(tidyr)
+library(ggplot2)
 
 # Load and prepare data
 load_interview_data <- function() {
@@ -171,8 +175,29 @@ ui <- fluidPage(
       br(),
       
       downloadButton("download_schedule", 
-                     "💾 Download Schedule", 
-                     class = "btn-success btn-block")
+                     "💾 Download Schedule (CSV)", 
+                     class = "btn-success btn-block"),
+      
+      hr(),
+      
+      h4("💼 Configuration Management"),
+      
+      downloadButton("save_config", 
+                     "💾 Save Configuration", 
+                     class = "btn-info btn-block"),
+      
+      br(),
+      
+      fileInput("load_config", 
+                "📂 Load Configuration",
+                accept = c(".rds"),
+                buttonLabel = "Browse...",
+                placeholder = "Select saved config file"),
+      
+      textInput("config_name",
+                "Configuration Name:",
+                value = paste0("schedule_", format(Sys.Date(), "%Y%m%d")),
+                placeholder = "Enter config name")
     ),
     
     mainPanel(
@@ -662,8 +687,6 @@ server <- function(input, output, session) {
     # Create a sequence of all dates for grid marks
     all_date_seq <- seq.Date(from = date_range[1], to = date_range[2], by = "day")
     
-    library(ggplot2)
-    
     if (nrow(values$selected_interviews) > 0) {
       df <- values$selected_interviews %>%
         mutate(
@@ -721,7 +744,137 @@ server <- function(input, output, session) {
         ylim(0.5, 1.5)
   })
   
-  # Download handler
+  # Date Availability Matrix for Comparison View
+  output$availability_matrix <- renderDT({
+    req(values$data_loaded)
+    
+    # Create a matrix of all programs and their available dates
+    all_interviews <- values$interview_data
+    
+    # Get unique programs and dates
+    programs <- unique(all_interviews$Program)
+    dates <- sort(unique(all_interviews$Date))
+    
+    # Create matrix data frame
+    matrix_data <- expand.grid(
+      Program = programs,
+      Date = dates,
+      stringsAsFactors = FALSE
+    )
+    
+    # Add date string for display
+    matrix_data$DateStr <- format(matrix_data$Date, "%m/%d")
+    
+    # Check availability for each combination
+    matrix_data$Status <- NA
+    for (i in 1:nrow(matrix_data)) {
+      prog <- matrix_data$Program[i]
+      date <- matrix_data$Date[i]
+      date_str <- format(date, "%Y-%m-%d")
+      
+      # Check if this combination exists in available interviews
+      is_available <- any(all_interviews$Program == prog & all_interviews$Date == date)
+      
+      if (is_available) {
+        # Check if it's selected
+        is_selected <- any(values$selected_programs == prog & values$selected_dates == date_str)
+        if (is_selected) {
+          matrix_data$Status[i] <- "Selected"
+        } else {
+          # Check if there's a conflict
+          date_conflict <- date_str %in% values$selected_dates
+          program_conflict <- prog %in% values$selected_programs
+          
+          if (date_conflict && program_conflict) {
+            matrix_data$Status[i] <- "Both Conflict"
+          } else if (date_conflict) {
+            matrix_data$Status[i] <- "Date Conflict"
+          } else if (program_conflict) {
+            matrix_data$Status[i] <- "Program Scheduled"
+          } else {
+            matrix_data$Status[i] <- "Available"
+          }
+        }
+      } else {
+        matrix_data$Status[i] <- "Not Offered"
+      }
+    }
+    
+    # Get program rankings
+    rankings <- values$ranking_data
+    program_ranks <- data.frame(
+      Program = rankings$Programs,
+      Rank = rankings$`preference order`
+    )
+    
+    # Pivot to wide format for display
+    matrix_wide <- matrix_data %>%
+      select(Program, DateStr, Status) %>%
+      tidyr::pivot_wider(
+        names_from = DateStr,
+        values_from = Status,
+        values_fill = "Not Offered"
+      )
+    
+    # Add rank column
+    matrix_wide <- matrix_wide %>%
+      left_join(program_ranks, by = "Program") %>%
+      arrange(Rank) %>%
+      select(Rank, Program, everything())
+    
+    # Create datatable with color coding
+    dt <- datatable(
+      matrix_wide,
+      options = list(
+        pageLength = -1,
+        scrollY = "500px",
+        scrollX = TRUE,
+        scrollCollapse = TRUE,
+        paging = FALSE,
+        dom = 'ft',
+        columnDefs = list(
+          list(className = 'dt-center', targets = '_all'),
+          list(width = '60px', targets = 0),
+          list(width = '150px', targets = 1)
+        )
+      ),
+      rownames = FALSE
+    )
+    
+    # Apply color coding to date columns
+    date_cols <- names(matrix_wide)[3:ncol(matrix_wide)]
+    
+    for (col in date_cols) {
+      dt <- dt %>%
+        formatStyle(
+          col,
+          backgroundColor = styleEqual(
+            c("Selected", "Available", "Date Conflict", "Program Scheduled", "Both Conflict", "Not Offered"),
+            c("#28a745", "#ffffff", "#ffc107", "#17a2b8", "#dc3545", "#e9ecef")
+          ),
+          color = styleEqual(
+            c("Selected", "Available", "Date Conflict", "Program Scheduled", "Both Conflict", "Not Offered"),
+            c("white", "black", "black", "white", "white", "#6c757d")
+          ),
+          fontWeight = styleEqual(
+            c("Selected"),
+            c("bold")
+          )
+        )
+    }
+    
+    # Highlight top programs
+    dt %>%
+      formatStyle(
+        'Rank',
+        backgroundColor = styleInterval(
+          c(5, 10, 20),
+          c("#d4edda", "#fff3cd", "#f8f9fa", "#ffffff")
+        )
+      )
+  }, server = FALSE)
+  
+  # Download handler for CSV export
   output$download_schedule <- downloadHandler(
     filename = function() {
       paste0("interview_schedule_", Sys.Date(), ".csv")
@@ -737,6 +890,107 @@ server <- function(input, output, session) {
       }
     }
   )
+  
+  # Save configuration handler
+  output$save_config <- downloadHandler(
+    filename = function() {
+      config_name <- if(is.null(input$config_name) || input$config_name == "") {
+        paste0("schedule_config_", Sys.Date())
+      } else {
+        input$config_name
+      }
+      paste0(config_name, ".rds")
+    },
+    content = function(file) {
+      # Create configuration object with all necessary data
+      config <- list(
+        selected_interviews = values$selected_interviews,
+        selected_dates = values$selected_dates,
+        selected_programs = values$selected_programs,
+        config_name = input$config_name,
+        saved_date = Sys.Date(),
+        saved_time = Sys.time(),
+        total_interviews = nrow(values$selected_interviews),
+        settings = list(
+          prefer_middle = input$prefer_middle,
+          avoid_wedding = input$avoid_wedding,
+          priority_filter = input$priority_filter,
+          month_filter = input$month_filter
+        )
+      )
+      
+      # Save as RDS file
+      saveRDS(config, file)
+      
+      showNotification(paste("Configuration saved:", input$config_name),
+                       type = "message", duration = 3)
+    }
+  )
+  
+  # Load configuration handler
+  observeEvent(input$load_config, {
+    req(input$load_config)
+    
+    tryCatch({
+      # Load the configuration file
+      config <- readRDS(input$load_config$datapath)
+      
+      # Validate the configuration
+      if (!all(c("selected_interviews", "selected_dates", "selected_programs") %in% names(config))) {
+        stop("Invalid configuration file format")
+      }
+      
+      # Clear current selections
+      values$selected_interviews <- data.frame()
+      values$selected_dates <- character()
+      values$selected_programs <- character()
+      
+      # Load the saved selections
+      if (!is.null(config$selected_interviews) && nrow(config$selected_interviews) > 0) {
+        values$selected_interviews <- config$selected_interviews
+        values$selected_dates <- config$selected_dates
+        values$selected_programs <- config$selected_programs
+      }
+      
+      # Update settings if they exist
+      if (!is.null(config$settings)) {
+        if (!is.null(config$settings$prefer_middle)) {
+          updateCheckboxInput(session, "prefer_middle", value = config$settings$prefer_middle)
+        }
+        if (!is.null(config$settings$avoid_wedding)) {
+          updateCheckboxInput(session, "avoid_wedding", value = config$settings$avoid_wedding)
+        }
+        if (!is.null(config$settings$priority_filter)) {
+          updatePickerInput(session, "priority_filter", selected = config$settings$priority_filter)
+        }
+        if (!is.null(config$settings$month_filter)) {
+          updatePickerInput(session, "month_filter", selected = config$settings$month_filter)
+        }
+      }
+      
+      # Update config name field
+      if (!is.null(config$config_name)) {
+        updateTextInput(session, "config_name", value = config$config_name)
+      }
+      
+      # Show success message
+      config_info <- paste0(
+        "Configuration loaded: ", 
+        ifelse(!is.null(config$config_name), config$config_name, "Unknown"),
+        " (", config$total_interviews, " interviews)"
+      )
+      
+      if (!is.null(config$saved_date)) {
+        config_info <- paste0(config_info, "\nSaved on: ", config$saved_date)
+      }
+      
+      showNotification(config_info, type = "message", duration = 4)
+      
+    }, error = function(e) {
+      showNotification(paste("Error loading configuration:", e$message),
+                       type = "error", duration = 5)
+    })
+  })
 }
 
 # Run the app
