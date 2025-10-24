@@ -17,7 +17,6 @@ version = 1
 [install]
 rstudio.pkg-path = "rstudio"
 r-with-packages.flake = "."
-git.pkg-path = "git"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 
