@@ -16,7 +16,6 @@ version = 1
 ## -------------------------------------------------------------------
 [install]
 rstudio.pkg-path = "rstudio"
-claude-code.pkg-path = "claude-code"
 r-with-packages.flake = "."
 git.pkg-path = "git"
 # gum.pkg-path = "gum"
