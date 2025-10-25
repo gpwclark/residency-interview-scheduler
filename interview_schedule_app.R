@@ -338,10 +338,12 @@ server <- function(input, output, session) {
         arrange(Rank, Date)
     }
 
-    # Add selection status
-    filtered$Status <- ifelse(filtered$Program %in% values$selected_programs, "Program Already Scheduled",
-                              ifelse(filtered$DateStr %in% values$selected_dates, "Date Conflict",
-                                     "Available"))
+    # Filter out programs that are already scheduled
+    filtered <- filtered %>%
+      filter(!(Program %in% values$selected_programs))
+
+    # Add selection status (only Date Conflict or Available now)
+    filtered$Status <- ifelse(filtered$DateStr %in% values$selected_dates, "Date Conflict", "Available")
 
     filtered
   })
@@ -379,12 +381,12 @@ server <- function(input, output, session) {
       formatStyle(
         'Status',
         color = styleEqual(
-          c("Available", "Program Already Scheduled", "Date Conflict"),
-          c("green", "orange", "red")
+          c("Available", "Date Conflict"),
+          c("green", "red")
         ),
         fontWeight = styleEqual(
-          c("Available", "Program Already Scheduled", "Date Conflict"),
-          c("normal", "bold", "bold")
+          c("Available", "Date Conflict"),
+          c("normal", "bold")
         )
       ) %>%
       # Add highlighting for selected rows
@@ -395,47 +397,22 @@ server <- function(input, output, session) {
       )
   }, server = FALSE)
   
-  # Handle row selection in available interviews
+  # Handle row selection in available interviews (only adds selections now)
   observeEvent(input$available_interviews_rows_selected, {
     if (!is.null(input$available_interviews_rows_selected)) {
       selected_row <- filtered_interviews()[input$available_interviews_rows_selected, ]
 
-      # Check if this specific interview is already selected (for toggle functionality)
-      is_already_selected <- any(
-        values$selected_programs == selected_row$Program &
-        values$selected_dates == selected_row$DateStr
-      )
-
-      if (is_already_selected) {
-        # Remove from selected interviews (toggle off)
-        values$selected_interviews <- values$selected_interviews %>%
-          filter(!(Program == selected_row$Program & DateStr == selected_row$DateStr))
-        
-        # Rebuild the dates and programs arrays from the remaining selections
-        if (nrow(values$selected_interviews) > 0) {
-          values$selected_dates <- values$selected_interviews$DateStr
-          values$selected_programs <- values$selected_interviews$Program
-        } else {
-          values$selected_dates <- character()
-          values$selected_programs <- character()
-        }
-        
-        showNotification(paste("Removed:", selected_row$Program, "on", selected_row$DateStr),
-                         type = "message", duration = 2)
-      } else if (selected_row$Status == "Available") {
+      if (selected_row$Status == "Available") {
         # Add to selected interviews
         # Ensure consistent columns by using bind_rows which handles column mismatches
         values$selected_interviews <- bind_rows(values$selected_interviews, selected_row)
         values$selected_dates <- c(values$selected_dates, selected_row$DateStr)
         values$selected_programs <- c(values$selected_programs, selected_row$Program)
-        
+
         showNotification(paste("Added:", selected_row$Program, "on", selected_row$DateStr),
                          type = "message", duration = 2)
       } else if (selected_row$Status == "Date Conflict") {
         showNotification(paste("Cannot select: Another interview already scheduled on", selected_row$DateStr),
-                         type = "warning", duration = 3)
-      } else {
-        showNotification(paste("Cannot select: Program already has a scheduled date"),
                          type = "warning", duration = 3)
       }
     }
