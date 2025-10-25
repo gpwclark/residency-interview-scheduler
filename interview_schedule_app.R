@@ -337,12 +337,12 @@ server <- function(input, output, session) {
       filtered <- filtered %>%
         arrange(Rank, Date)
     }
-    
+
     # Add selection status
     filtered$Status <- ifelse(filtered$Program %in% values$selected_programs, "Program Already Scheduled",
                               ifelse(filtered$DateStr %in% values$selected_dates, "Date Conflict",
                                      "Available"))
-    
+
     filtered
   })
   
@@ -350,12 +350,12 @@ server <- function(input, output, session) {
   output$available_interviews <- renderDT({
     df <- filtered_interviews() %>%
       select(Program, Rank, Date = DateStr, Weekday, Priority, Status)
-    
+
     # Add a column to track if this specific combination is selected
-    df$IsSelected <- paste(df$Program, df$Date) %in% 
+    df$IsSelected <- paste(df$Program, df$Date) %in%
                      paste(values$selected_programs, values$selected_dates)
-    
-    dt <- datatable(df,
+
+    datatable(df,
               selection = 'single',
               options = list(
                 pageLength = -1,  # Show all rows
@@ -386,27 +386,26 @@ server <- function(input, output, session) {
           c("Available", "Program Already Scheduled", "Date Conflict"),
           c("normal", "bold", "bold")
         )
+      ) %>%
+      # Add highlighting for selected rows
+      formatStyle(
+        columns = 0:6,
+        valueColumns = 'IsSelected',
+        backgroundColor = styleEqual(TRUE, '#e6f2ff')
       )
-    
-    # Add highlighting for selected rows
-    dt %>% formatStyle(
-      columns = 0:6,
-      valueColumns = 'IsSelected',
-      backgroundColor = styleEqual(TRUE, '#e6f2ff')
-    )
   }, server = FALSE)
   
   # Handle row selection in available interviews
   observeEvent(input$available_interviews_rows_selected, {
     if (!is.null(input$available_interviews_rows_selected)) {
       selected_row <- filtered_interviews()[input$available_interviews_rows_selected, ]
-      
+
       # Check if this specific interview is already selected (for toggle functionality)
       is_already_selected <- any(
-        values$selected_programs == selected_row$Program & 
+        values$selected_programs == selected_row$Program &
         values$selected_dates == selected_row$DateStr
       )
-      
+
       if (is_already_selected) {
         # Remove from selected interviews (toggle off)
         values$selected_interviews <- values$selected_interviews %>%
@@ -425,7 +424,8 @@ server <- function(input, output, session) {
                          type = "message", duration = 2)
       } else if (selected_row$Status == "Available") {
         # Add to selected interviews
-        values$selected_interviews <- rbind(values$selected_interviews, selected_row)
+        # Ensure consistent columns by using bind_rows which handles column mismatches
+        values$selected_interviews <- bind_rows(values$selected_interviews, selected_row)
         values$selected_dates <- c(values$selected_dates, selected_row$DateStr)
         values$selected_programs <- c(values$selected_programs, selected_row$Program)
         
@@ -735,8 +735,8 @@ server <- function(input, output, session) {
           axis.ticks.y = element_blank(),
           panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_blank(),
-          panel.grid.minor.x = element_line(color = "gray90", size = 0.25),
-          panel.grid.major.x = element_line(color = "gray80", size = 0.5),
+          panel.grid.minor.x = element_line(color = "gray90", linewidth = 0.25),
+          panel.grid.major.x = element_line(color = "gray80", linewidth = 0.5),
           axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
           legend.position = "bottom",
           plot.subtitle = element_text(color = "gray50", size = 10)
