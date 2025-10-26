@@ -128,14 +128,10 @@ ui <- fluidPage(
       
       h4("🎯 Optimization Settings"),
       
-      checkboxInput("prefer_middle", 
+      checkboxInput("prefer_middle",
                     "Prioritize mid-season dates for top programs",
                     value = TRUE),
-      
-      checkboxInput("avoid_wedding",
-                    "Avoid Nov 21-23 (Wedding)",
-                    value = TRUE),
-      
+
       hr(),
       
       h4("🔍 Filter Options"),
@@ -322,13 +318,6 @@ server <- function(input, output, session) {
       filter(Priority %in% priority_filter,
              Month %in% month_filter)
     
-    # Remove wedding dates if selected
-    if (!is.null(input$avoid_wedding) && input$avoid_wedding) {
-      wedding_dates <- as.Date(c("2025-11-21", "2025-11-22", "2025-11-23"))
-      filtered <- filtered %>%
-        filter(!(Date %in% wedding_dates))
-    }
-    
     # Sort by rank and date
     if (!is.null(input$prefer_middle) && input$prefer_middle) {
       filtered <- filtered %>%
@@ -503,13 +492,6 @@ server <- function(input, output, session) {
     # Get all interviews sorted by rank
     req(values$data_loaded)
     all_interviews <- values$interview_data
-    
-    # Remove wedding dates if needed
-    if (!is.null(input$avoid_wedding) && input$avoid_wedding) {
-      wedding_dates <- as.Date(c("2025-11-21", "2025-11-22", "2025-11-23"))
-      all_interviews <- all_interviews %>%
-        filter(!(Date %in% wedding_dates))
-    }
     
     # Sort by rank and centrality if preferred
     if (!is.null(input$prefer_middle) && input$prefer_middle) {
@@ -890,7 +872,6 @@ server <- function(input, output, session) {
         total_interviews = nrow(values$selected_interviews),
         settings = list(
           prefer_middle = input$prefer_middle,
-          avoid_wedding = input$avoid_wedding,
           priority_filter = input$priority_filter,
           month_filter = input$month_filter
         )
@@ -933,9 +914,6 @@ server <- function(input, output, session) {
       if (!is.null(config$settings)) {
         if (!is.null(config$settings$prefer_middle)) {
           updateCheckboxInput(session, "prefer_middle", value = config$settings$prefer_middle)
-        }
-        if (!is.null(config$settings$avoid_wedding)) {
-          updateCheckboxInput(session, "avoid_wedding", value = config$settings$avoid_wedding)
         }
         if (!is.null(config$settings$priority_filter)) {
           updatePickerInput(session, "priority_filter", selected = config$settings$priority_filter)
