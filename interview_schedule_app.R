@@ -623,8 +623,7 @@ server <- function(input, output, session) {
         recommendations <- append(recommendations,
                                   list(
                                     br(),
-                                    p(paste0("📅 You have gaps of more than ", MAX_GAP_DAYS, " days between some interviews. 
-                                      Consider filling these gaps if possible.")
+                                    p(paste0("📅 You have gaps of more than ", MAX_GAP_DAYS, " days between some interviews. Consider filling these gaps if possible."))
                                   ))
       }
       
