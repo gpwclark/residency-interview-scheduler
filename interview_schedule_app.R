@@ -20,11 +20,34 @@ library(shinyWidgets)
 library(tidyr)
 library(ggplot2)
 
+# ============================================================================
+# GLOBAL CONSTANTS
+# ============================================================================
+
+# Priority Rank Cutoffs (determines what rank threshold = what priority)
+RANK_CUTOFF_TOP_PRIORITY <- 5   # Ranks 1-5 = TOP PRIORITY
+RANK_CUTOFF_HIGH <- 10           # Ranks 6-10 = HIGH
+RANK_CUTOFF_MEDIUM <- 20         # Ranks 11-20 = MEDIUM
+                                 # Ranks 21+ = LOW
+
+# Schedule Analysis Thresholds
+MAX_GAP_DAYS <- 7                # Maximum recommended days between interviews
+MAX_TOP_PROGRAM_DISTANCE <- 10   # Maximum avg days top programs should be from center
+
+# Notification Durations (seconds)
+NOTIFICATION_DURATION_SHORT <- 2
+NOTIFICATION_DURATION_MEDIUM <- 3
+NOTIFICATION_DURATION_LONG <- 4
+NOTIFICATION_DURATION_ERROR <- 5
+
+# File Paths
+FILE_PATH_INTERVIEW_MATRIX <- "Interview_matrix.xlsx"
+
+# ============================================================================
 # Load and prepare data
 load_interview_data <- function() {
-  # File path - update this to your local path
-  file_path <- "Interview_matrix.xlsx"
-  
+  file_path <- FILE_PATH_INTERVIEW_MATRIX
+
   # Load ranking data
   ranking <- read_excel(file_path, sheet = "ranking")
   
@@ -60,9 +83,9 @@ load_interview_data <- function() {
   }
   
   # Add priority level
-  interview_options$Priority <- ifelse(interview_options$Rank <= 5, "TOP PRIORITY",
-                                        ifelse(interview_options$Rank <= 10, "HIGH",
-                                               ifelse(interview_options$Rank <= 20, "MEDIUM", "LOW")))
+  interview_options$Priority <- ifelse(interview_options$Rank <= RANK_CUTOFF_TOP_PRIORITY, "TOP PRIORITY",
+                                        ifelse(interview_options$Rank <= RANK_CUTOFF_HIGH, "HIGH",
+                                               ifelse(interview_options$Rank <= RANK_CUTOFF_MEDIUM, "MEDIUM", "LOW")))
   
   # Add month for grouping
   interview_options$Month <- format(interview_options$Date, "%B %Y")
@@ -399,10 +422,10 @@ server <- function(input, output, session) {
         values$selected_programs <- c(values$selected_programs, selected_row$Program)
 
         showNotification(paste("Added:", selected_row$Program, "on", selected_row$DateStr),
-                         type = "message", duration = 2)
+                         type = "message", duration = NOTIFICATION_DURATION_SHORT)
       } else if (selected_row$Status == "Date Conflict") {
         showNotification(paste("Cannot select: Another interview already scheduled on", selected_row$DateStr),
-                         type = "warning", duration = 3)
+                         type = "warning", duration = NOTIFICATION_DURATION_MEDIUM)
       }
     }
   })
@@ -458,20 +481,20 @@ server <- function(input, output, session) {
       }
       
       showNotification(paste("Removed:", row_to_remove$Program),
-                       type = "message", duration = 2)
+                       type = "message", duration = NOTIFICATION_DURATION_SHORT)
     }
   })
   
   # Statistics
   output$stats <- renderUI({
     total_selected <- nrow(values$selected_interviews)
-    top5_selected <- sum(values$selected_interviews$Rank <= 5, na.rm = TRUE)
-    top10_selected <- sum(values$selected_interviews$Rank <= 10, na.rm = TRUE)
-    
+    top5_selected <- sum(values$selected_interviews$Rank <= RANK_CUTOFF_TOP_PRIORITY, na.rm = TRUE)
+    top10_selected <- sum(values$selected_interviews$Rank <= RANK_CUTOFF_HIGH, na.rm = TRUE)
+
     div(
       p(strong("Total Scheduled: "), total_selected),
-      p(strong("Top 5 Programs: "), paste0(top5_selected, " / 5")),
-      p(strong("Top 10 Programs: "), paste0(top10_selected, " / 10")),
+      p(strong(paste0("Top ", RANK_CUTOFF_TOP_PRIORITY, " Programs: ")), paste0(top5_selected, " / ", RANK_CUTOFF_TOP_PRIORITY)),
+      p(strong(paste0("Top ", RANK_CUTOFF_HIGH, " Programs: ")), paste0(top10_selected, " / ", RANK_CUTOFF_HIGH)),
       if (total_selected > 0) {
         p(strong("Date Range: "), 
           paste(min(values$selected_interviews$Date), "to", 
@@ -482,7 +505,7 @@ server <- function(input, output, session) {
   
   # Auto-optimize function
   observeEvent(input$auto_optimize, {
-    showNotification("Auto-optimizing schedule...", type = "message", duration = 2)
+    showNotification("Auto-optimizing schedule...", type = "message", duration = NOTIFICATION_DURATION_SHORT)
     
     # Clear current selections
     values$selected_interviews <- data.frame()
@@ -529,7 +552,7 @@ server <- function(input, output, session) {
     
     showNotification(paste("Auto-optimization complete!", 
                            nrow(values$selected_interviews), "interviews scheduled"),
-                     type = "message", duration = 3)
+                     type = "message", duration = NOTIFICATION_DURATION_MEDIUM)
   })
   
   # Clear all selections
@@ -537,7 +560,7 @@ server <- function(input, output, session) {
     values$selected_interviews <- data.frame()
     values$selected_dates <- character()
     values$selected_programs <- character()
-    showNotification("All selections cleared", type = "message", duration = 2)
+    showNotification("All selections cleared", type = "message", duration = NOTIFICATION_DURATION_SHORT)
   })
   
   # Unscheduled programs
@@ -596,18 +619,18 @@ server <- function(input, output, session) {
       dates <- as.Date(values$selected_interviews$Date)
       date_gaps <- diff(sort(dates))
       
-      if (max(date_gaps) > 7) {
+      if (max(date_gaps) > MAX_GAP_DAYS) {
         recommendations <- append(recommendations,
                                   list(
                                     br(),
-                                    p("📅 You have gaps of more than 7 days between some interviews. 
+                                    p(paste0("📅 You have gaps of more than ", MAX_GAP_DAYS, " days between some interviews. 
                                       Consider filling these gaps if possible.")
                                   ))
       }
       
       # Check top program positioning
       top5_dates <- values$selected_interviews %>%
-        filter(Rank <= 5) %>%
+        filter(Rank <= RANK_CUTOFF_TOP_PRIORITY) %>%
         pull(Date)
       
       if (length(top5_dates) > 0) {
@@ -616,13 +639,13 @@ server <- function(input, output, session) {
         mid_date <- mean(date_range)
         
         avg_distance <- mean(abs(as.numeric(top5_dates - mid_date)))
-        
-        if (avg_distance > 10) {
+
+        if (avg_distance > MAX_TOP_PROGRAM_DISTANCE) {
           recommendations <- append(recommendations,
                                     list(
                                       br(),
-                                      p("📍 Your top 5 programs are not well-centered in your schedule. 
-                                        Consider adjusting dates to place them closer to mid-season.")
+                                      p(paste0("📍 Your top ", RANK_CUTOFF_TOP_PRIORITY, " programs are not well-centered in your schedule.
+                                        Consider adjusting dates to place them closer to mid-season."))
                                     ))
         }
       }
@@ -881,7 +904,7 @@ server <- function(input, output, session) {
       saveRDS(config, file)
       
       showNotification(paste("Configuration saved:", input$config_name),
-                       type = "message", duration = 3)
+                       type = "message", duration = NOTIFICATION_DURATION_MEDIUM)
     }
   )
   
@@ -939,11 +962,11 @@ server <- function(input, output, session) {
         config_info <- paste0(config_info, "\nSaved on: ", config$saved_date)
       }
       
-      showNotification(config_info, type = "message", duration = 4)
+      showNotification(config_info, type = "message", duration = NOTIFICATION_DURATION_LONG)
       
     }, error = function(e) {
       showNotification(paste("Error loading configuration:", e$message),
-                       type = "error", duration = 5)
+                       type = "error", duration = NOTIFICATION_DURATION_ERROR)
     })
   })
 }
